@@ -1,6 +1,7 @@
 <template>
   <div id="app" style="padding:20px">
-    <h2>Please enter your data</h2>
+    <h1 class="is-size-4">Please enter your data</h1>
+    <div v-if="warningMsg" class="has-text-danger">{{warningMsg}}</div>
     <form v-on:submit.prevent="onSubmit">
       <div class="field">
         <label class="label">Type</label>
@@ -31,19 +32,24 @@
         <table class="table is-bordered is-striped is-narrow is-hoverable is-fullwidth">
           <thead>
             <tr>
-              <td>Type</td>
-              <td>Description</td>
-              <td>Fine</td>
-              <td>Is Paid</td>
-              <td>#</td>
+              <th>Type</th>
+              <th>Description</th>
+              <th>Fine</th>
+              <th>Is Paid</th>
+              <th>#</th>
             </tr>
           </thead>
           <tbody>
+            <tr v-if="this.results.length ==0">
+              <td colspan="5">
+                No Data
+              </td>
+            </tr>
             <tr v-for="result in results" :key="result.Id">
               <td>{{result.type}}</td>
               <td>{{result.dectiption}}</td>
               <td>{{result.fine}}</td>
-              <td>{{paidStatus}}</td>
+              <td>{{result.isPaid?"จ่ายแล้ว":"ยังไม่จ่าย"}}</td>
               <td>
                 <button
                   type="button"
@@ -78,6 +84,7 @@ export default {
     return {
       lastId: 0,
       isEditId: null,
+      warningMsg: null,
       form: {
         Id: null,
         type: "",
@@ -88,42 +95,46 @@ export default {
       results: []
     };
   },
-  computed: {
-    // a computed getter
-    paidStatus: function() {
-      if (this.isPaid) {
-        return "จ่ายแล้ว";
-      } else {
-        return "ยังไม่จ่าย";
-      }
-    }
-  },
   methods: {
     onSubmit() {
-      if (this.isEditId) {
-        this.onDelete(this.isEditId);
-        let obj = Object.assign({}, this.form);
-        obj.Id = this.isEditId;
-        this.results.push(obj);
-      } else {
-        this.lastId++;
+      if (
+        this.form.type &&
+        this.form.type &&
+        this.form.dectiption &&
+        this.form.fine
+      ) {
+        if (this.isEditId) {
+          this.onDelete(this.isEditId);
+          let obj = Object.assign({}, this.form);
+          obj.Id = this.isEditId;
+          this.results.push(obj);
+        } else {
+          this.lastId++;
 
-        let obj = Object.assign({}, this.form);
-        obj.Id = this.lastId;
-        this.results.push(obj);
+          let obj = Object.assign({}, this.form);
+          obj.Id = this.lastId;
+          this.results.push(obj);
+        }
+        this.form = {
+          Id: null,
+          type: "",
+          dectiption: "",
+          fine: null,
+          isPaid: false
+        };
+        this.isEditId = null;
+      } else {
+        this.warningMsg = "Please enter all fields before submit.";
       }
-      this.form = {};
-      this.isEditId = null;
     },
     onUpdate(item) {
       this.form.Id = item.Id;
-      this.form.type = item.type;
+      this.form.type = "HELLO";
       this.form.dectiption = item.dectiption;
       this.form.fine = item.fine;
       this.form.isPaid = item.isPaid;
 
       this.isEditId = item.Id;
-      alert("55");
     },
     onPaid(id) {
       this.results = this.results.map(f =>
